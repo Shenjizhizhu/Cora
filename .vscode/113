@@ -1,0 +1,31 @@
+import torch
+import numpy as np
+import scipy.sparse as sp
+import os
+from torch.utils.data import Dataset
+
+class CORADataset(Dataset):
+    def __init__(self, root='./'):
+        content = np.genfromtxt(os.path.join(root, 'Cora.content'), dtype=str)
+        cites = np.genfromtxt(os.path.join(root, 'Cora.cites'), dtype=np.int32)
+        
+        self.features = sp.diags(1/content[:,1:-1].astype(np.float32).sum(1).flatten(), 
+                                 where=content[:,1:-1].astype(np.float32).sum(1).flatten()!=0)\
+                        .dot(sp.csr_matrix(content[:,1:-1].astype(np.float32))).todense()
+        
+        self.labels = np.vectorize({c:i for i,c in enumerate(sorted(set(content[:,-1])))}.get)(content[:,-1]).astype(np.int64)
+        
+        idx_map = dict(zip(content[:,0].astype(np.int32), range(len(content))))
+        
+        edges = np.vectorize(idx_map.get)(cites).reshape(-1,2)
+        self.adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:,0], edges[:,1])), 
+                                 shape=(len(self.labels), len(self.labels))).maximum(sp.coo_matrix((np.ones(edges.shape[0]), (edges[:,1], edges[:,0])), shape=(len(self.labels), len(self.labels))))
+
+    def __getitem__(self, idx):
+        return (
+            torch.tensor(self.features[idx], dtype=torch.float), 
+            torch.tensor(self.labels[idx], dtype=torch.long)    
+        )
+
+    def __len__(self):
+        return len(self.labels)

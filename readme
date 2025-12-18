@@ -1,0 +1,113 @@
+                                                        UA-TRAC Vehicle Detection with ResNetFPN-YOLO5
+summary:
+        This project implements vehicle detection on the UA-TRAC dataset using a combination of ResNet34 + FPN (Feature Pyramid Network) and the YOLOv5 detection head. It includes a complete workflow covering data preprocessing, anchor box clustering, model training, validation, testing, and result visualization.
+
+requestment:
+1. Project Overview
+
+  Core Features 
+    • Automatically split the UA-TRAC dataset into training/validation/test sets 
+    • Generate dataset-adapted anchor boxes via KMeans clustering 
+    • Build a lightweight YOLOv5 detection model based on ResNet34 + FPN 
+    • Support loss monitoring, mAP evaluation, and early stopping during training 
+    • Visualize original labels and prediction results, and calculate mAP@0.5/mAP@0.75 metrics
+
+  Tech Stack
+    • Framework: PyTorch (deep learning framework) 
+    • Data Processing: OpenCV, Albumentations (data augmentation), NumPy, Scikit-learn (clustering/dataset splitting) 
+    • Model: ResNet34 (backbone), FPN (feature fusion), YOLOv5 (detection head)
+
+2. Environment Setup
+
+  Hardware Requirements 
+    • CPU/GPU (GPU is recommended, e.g., NVIDIA CUDA 11.8+ for accelerated training) 
+    • GPU memory ≥ 4GB (when using a batch size of 8)
+
+  Software Requirements 
+    • Python 3.8+ • PyTorch 2.0+ 
+    • Other dependencies are listed in requirements.txt
+
+  Installation Steps
+    Step 1: Clone the Project (Optional)
+      git clone https://github.com/Shenjizhizhu/Cora
+      cd 
+  Step 2: Install Dependencies
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+    pip install opencv-python albumentations scikit-learn numpy
+
+  Alternatively, create a requirements.txt file for batch installation:
+    # requirements.txt
+    torch>=2.0.0
+    torchvision>=0.15.0
+    opencv-python>=4.8.0
+    albumentations>=1.3.0
+    scikit-learn>=1.2.0
+    numpy>=1.24.0
+  
+  Run the installation command:
+    pip install -r requirements.txt
+
+3. Dataset Preparation
+  Dataset Structure
+    The UA-TRAC dataset should be placed in the specified path, with the default structure:
+      UA-TRAC/
+├── Insight-MVT_Annotation_Train/  # Folder containing all vehicle images
+│   ├── img1.jpg
+│   ├── img2.jpg
+│   └── ...
+└── train_gt.txt  # Label file (format: image_name x1 y1 x2 y2 x1 y1 x2 y2 ...)
+
+    Label Format Description
+      Each line in train_gt.txt corresponds to the label of one image, formatted as:
+        image_name.jpg x1 y1 x2 y2 x1 y1 x2 y2 ...
+      Where x1 y1 x2 y2 represent the top-left and bottom-right coordinates of the vehicle bounding box.
+4. Usage Instructions
+ 
+  Configure Parameters (Optional)
+    Core project parameters are defined in config.py and can be adjusted as needed: 
+      • Path parameters: ROOT_PATH (root path of the UA-TRAC dataset), IMG_ROOT (path to the image folder) 
+      • Training parameters: EPOCHS (number of training epochs), BATCH_SIZE (batch size), LR (learning rate) 
+      • Model parameters: IMG_SIZE (input image size, default 640x640), NUM_CLASSES (number of classes, default 1 for vehicles)
+ 
+  Run the Project
+    Execute the main entry file main.py to run the full workflow: data preprocessing → anchor box clustering → model training → testing → result visualization: bash
+    
+    python main.py
+
+  Key Outputs
+    • Model Weights: After training, best_yolov5_resnet_fpn.pth (optimal model) and last_yolov5_resnet_fpn.pth (final epoch model) are saved in the   UA-TRAC root directory 
+    • Visualization Results: The outputting_imgs folder contains images with original labels and prediction results 
+    • Log Information: The console prints training losses, validation mAP, and test mAP@0.5/mAP@0.75
+
+5. Project Structure
+├── config.py          # Project configuration (paths, hyperparameters, device, etc.)
+├── dataset.py         # Dataset definition & data augmentation
+├── model.py           # Model definition (ResNetFPN, YOLOv5 detection head)
+├── loss.py            # YOLOv5 loss function (bbox loss, confidence loss, classification loss)
+├── train.py           # Training, validation, and testing logic
+├── utils.py           # Utility functions (data loading, anchor clustering, mAP calculation, NMS, etc.)
+├── main.py            # Main entry point (executes the full workflow)
+├── README.md          # Project documentation
+└── requirements.txt   # Dependency list
+
+6. Core Module Explanations
+  1. Data Processing: The UATracDatasetYOLO class in dataset.py handles dataset loading, supports data augmentation (Resize, Normalize), and converts bounding box formats (Pascal VOC → YOLO).
+  2. Model Structure: The ResNetFPNYOLOv5 class in model.py combines the ResNet34 backbone, FPN feature fusion, and YOLOv5 detection head for multi-scale feature detection. 
+  3. Loss Function: The YOLOv5Loss class in loss.py includes MSE loss for bounding boxes (with small-object enhancement), confidence loss, and classification loss. 
+  4. Evaluation Metrics: utils.py implements mAP (mean Average Precision) calculation, supporting different IoU thresholds (0.5/0.75).
+
+7. Common Issues
+  1. NameError: name 'torch' is not defined: Ensure import torch is added at the top of the corresponding file. 
+  2. ModuleNotFoundError: No module named 'albumentations': Install the dependency with pip install albumentations. 
+  3. Image Loading Failure: Check if the paths in config.py are correct, and ensure the dataset image path matches the path in the code. 
+  4. CUDA Out of Memory: Reduce BATCH_SIZE in config.py (e.g., to 4 or 2), or decrease IMG_SIZE.
+8. Future Optimization Directions 
+  1. Add more data augmentation strategies (e.g., random cropping, flipping, color space transformation). 
+  2. Replace the backbone with ResNet50/ResNet101 to improve feature extraction capability. 
+  3. Integrate EMA (Exponential Moving Average) and mixed-precision training to accelerate training and enhance model stability.
+  4. Support ONNX model export for deployment and inference.
+ 
+      
+  
+
+
